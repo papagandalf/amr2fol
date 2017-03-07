@@ -1,0 +1,22 @@
+(d / die-01
+   :ARG1 (m / man)
+   :location (h / house
+                :poss m))
+
+(e / giggle-01
+    :polarity -
+    :ARG0 (x / boy))
+
+(x / language
+    :domain-of (a / appropriate
+        :polarity - ))
+
+(e / dry-01
+    :ARG0 (x / person
+        :named "Mr Krupp")
+    :ARG1 x)
+
+(w / want-01
+    :ARG0 (g / person :named "George")
+    :ARG1 (p / play-01
+        :ARG0 g))
