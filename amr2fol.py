@@ -9,6 +9,16 @@ import penman
 from nltk.sem.logic import Expression
 
 
+class AMRCodecNoInvert(penman.AMRCodec):
+    def is_relation_inverted(self, relation):
+        return False
+
+    def invert_relation(self, relation):
+        raise Exception("Unexpected!")
+
+CODEC = AMRCodecNoInvert
+
+
 def strip_lambdas(expression):
     expression_str = str(expression)
     ret = []
@@ -25,20 +35,22 @@ def strip_lambdas(expression):
 
 def eliminate_t(expression):
     expression_str = str(expression)
-    pattern = " & T("
-    index = expression_str.find(pattern)
+    t_prefix = " & T("
+    index = expression_str.find(t_prefix)
     if index == -1:
         return expression
-    expression_str = expression_str[:index] + expression_str[index+len(pattern)+2:]
+    var = expression_str[index + len(t_prefix)]
+    t = "{0}{1})".format(t_prefix, var)
+    expression_str = expression_str.replace(t, "")
+    assert expression_str.find(t_prefix) == -1
     return Expression.fromstring(expression_str)
 
 def create_graph(triples, top):
     assert top is not None
-    g = penman.AMRCodec().triples_to_graph(triples, top=top)
-    return g
+    return CODEC().triples_to_graph(triples, top=top)
 
 def get_variable_concept(variable, amr_graph):
-    concept = amr_graph.attributes(source=variable, relation="instance")
+    concept = amr_graph.triples(source=variable, relation="instance")
     assert len(concept) == 1
     return concept[0].target
 
@@ -67,15 +79,15 @@ def normalize_constant(constant):
     return constant.replace(".", "_DOT_").replace(" ", "_SPACE_").replace("-", "_")
 
 def amr2fol(amr, debug=False):
-    amr_graph = penman.loads(amr, cls=penman.AMRCodec)
+    amr_graph = penman.loads(amr, cls=CODEC)
     assert len(amr_graph) == 1, "More than one AMR supplied"
     amr_graph = amr_graph[0]
-    set_graph_root(amr_graph)
+    assert amr_graph.top == get_graph_root(amr_graph)
     assertive_part = lambda_amr_assertive(amr_graph, "\u.T") # TODO: must u here be unique?
     assertive_logic = Expression.fromstring(assertive_part).simplify()
     projective_part = lambda_amr_projective(amr_graph)
     projective_logic = Expression.fromstring(projective_part).simplify()
-    final_logic = (projective_logic(assertive_logic)).simplify()
+    final_logic = (projective_logic.applyto(assertive_logic)).simplify()
     final_logic = eliminate_t(strip_lambdas(final_logic)).simplify()
     if debug:
         print "assertive logic: {}".format(assertive_part)
@@ -92,25 +104,25 @@ def lambda_amr_assertive(amr_graph, phi, ignore_projective=False):
     if not ignore_projective and is_projective(top, amr_graph):
         return "{0}({1})".format(phi, top)
 
-    concept = get_variable_concept(top, amr_graph)
+    concept = normalize_predicate_name(get_variable_concept(top, amr_graph))
     negative = is_negative(top, amr_graph)
     relations = get_outgoing_relations(top, amr_graph)
     if len(relations) == 0:
         lambda_string = ""
         if negative:
             lambda_string = "-"
-        lambda_string += "exists {0}.({1}({0}) & {2}({0}))".format(top, normalize_predicate_name(concept), phi)
+        lambda_string += "exists {0}.({1}({0}) & {2}({0}))".format(top, concept, phi)
         return lambda_string
 
     lambda_string = ""
     if negative:
         lambda_string = "-"
-    lambda_string += "exists {0}.({1}({0})".format(top, normalize_predicate_name(concept))
+    lambda_string += "exists {0}.({1}({0})".format(top, concept)
 
     future_projective_variables = set()
     for t in relations:
         assert t.source == top
-        relation = t.relation
+        relation = normalize_predicate_name(t.relation)
         other = t.target
         if other not in amr_graph.variables():
             # other is a constant
@@ -158,30 +170,25 @@ def lambda_amr_projective(amr_graph):
     lambda_string += ")"*len(relations)
     return lambda_string
 
-def set_graph_root(amr_graph):
+def get_graph_root(amr_graph):
     variables = amr_graph.variables()
     triples = amr_graph.triples()
     indegrees = { var: 0 for var in variables }
     for t in triples:
-        target = t.target
-        if target not in variables:
-            # target is a constant
-            continue
-        indegrees[target] += 1
+        if t.target in variables:
+            indegrees[t.target] += 1
     root = [node for node in indegrees if indegrees[node] == 0]
     assert len(root) == 1, "Found multiple roots: {}".format(" ".join(root))
-    amr_graph.top = root[0]
-
+    return root[0]
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
         print "Usage: python {0} amr-filepath".format(sys.argv[0])
         sys.exit(1)
-    graphs = penman.load(sys.argv[1], cls=penman.AMRCodec)
+    graphs = penman.load(sys.argv[1], cls=CODEC)
     for g in graphs:
-        set_graph_root(g)
-        amr = penman.AMRCodec().encode(g)
+        amr = CODEC().encode(g)
         print amr
         print amr2fol(amr)
 

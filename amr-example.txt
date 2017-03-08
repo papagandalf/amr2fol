@@ -20,3 +20,8 @@
     :ARG0 (g / person :named "George")
     :ARG1 (p / play-01
         :ARG0 g))
+
+(b / bark
+   :ARG0 (d / dog
+            :ARG1-of (s / see
+                        :ARG0 (i / i))))
