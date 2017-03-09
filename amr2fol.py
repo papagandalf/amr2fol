@@ -72,7 +72,7 @@ def normalize_predicate_name(predicate_name):
     if predicate_name in ["and", "or", "implies", "iff", "some", "exists", "exist", "all", "forall", "not"]:
         predicate_name = predicate_name.upper()
     if len(predicate_name) == 1:
-        predicate_name = "_{}_".format(predicate_name)
+        predicate_name = "_{0}_".format(predicate_name)
     return predicate_name
 
 def normalize_constant(constant):
@@ -83,18 +83,18 @@ def amr2fol(amr, debug=False):
     assert len(amr_graph) == 1, "More than one AMR supplied"
     amr_graph = amr_graph[0]
     assert amr_graph.top == get_graph_root(amr_graph)
-    assertive_part = lambda_amr_assertive(amr_graph, "\u.T") # TODO: must u here be unique?
+    assertive_part = lambda_amr_assertive(amr_graph, "\\u.T") # TODO: must u here be unique?
     assertive_logic = Expression.fromstring(assertive_part).simplify()
     projective_part = lambda_amr_projective(amr_graph)
     projective_logic = Expression.fromstring(projective_part).simplify()
     final_logic = (projective_logic.applyto(assertive_logic)).simplify()
     final_logic = eliminate_t(strip_lambdas(final_logic)).simplify()
     if debug:
-        print "assertive logic: {}".format(assertive_part)
-        print "assertive logic (simplified): {}".format(assertive_logic)
-        print "prjective logic: {}".format(projective_part)
-        print "projective logic (simplified): {}".format(projective_logic)
-        print "final logic (simplified, stripped lambdas, eliminate T): {}".format(final_logic)
+        print("assertive logic: {0}".format(assertive_part))
+        print("assertive logic (simplified): {0}".format(assertive_logic))
+        print("prjective logic: {0}".format(projective_part))
+        print("projective logic (simplified): {0}".format(projective_logic))
+        print("final logic (simplified, stripped lambdas, eliminate T): {0}".format(final_logic))
     assert len(final_logic.free()) == 0
     return final_logic
 
@@ -140,7 +140,7 @@ def lambda_amr_assertive(amr_graph, phi, ignore_projective=False):
         lambda_string = "\{0}.({1})".format(" ".join(list(future_projective_variables)), lambda_string)
     return lambda_string
 
-def lambda_amr_projective(amr_graph):    
+def lambda_amr_projective(amr_graph):
     top = amr_graph.top
     relations = get_outgoing_relations(top, amr_graph)
     projective = is_projective(top, amr_graph)
@@ -178,18 +178,18 @@ def get_graph_root(amr_graph):
         if t.target in variables:
             indegrees[t.target] += 1
     root = [node for node in indegrees if indegrees[node] == 0]
-    assert len(root) == 1, "Found multiple roots: {}".format(" ".join(root))
+    assert len(root) == 1, "Found multiple roots: {0}".format(" ".join(root))
     return root[0]
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print "Usage: python {0} amr-filepath".format(sys.argv[0])
+        print("Usage: python {0} amr-filepath".format(sys.argv[0]))
         sys.exit(1)
     graphs = penman.load(sys.argv[1], cls=CODEC)
     for g in graphs:
         amr = CODEC().encode(g)
-        print amr
-        print amr2fol(amr)
+        print(amr)
+        print(amr2fol(amr))
 
 
