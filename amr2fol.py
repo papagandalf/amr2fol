@@ -36,12 +36,11 @@ def strip_lambdas(expression):
 def eliminate_t(expression):
     expression_str = str(expression)
     t_prefix = " & T("
-    index = expression_str.find(t_prefix)
-    if index == -1:
+    start_index = expression_str.find(t_prefix)
+    if start_index == -1:
         return expression
-    var = expression_str[index + len(t_prefix)]
-    t = "{0}{1})".format(t_prefix, var)
-    expression_str = expression_str.replace(t, "")
+    end_index = expression_str.find(")", start_index)
+    expression_str = expression_str[:start_index] + expression_str[end_index+1:]
     assert expression_str.find(t_prefix) == -1
     return Expression.fromstring(expression_str)
 
