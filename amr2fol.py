@@ -67,6 +67,8 @@ def is_negative(variable, amr_graph):
     return polarity == 1
 
 def normalize_predicate_name(predicate_name):
+    if not isinstance(predicate_name, basestring):
+        predicate_name = str(predicate_name)
     predicate_name = predicate_name.strip().replace("-", "_")
     if predicate_name in ["and", "or", "implies", "iff", "some", "exists", "exist", "all", "forall", "not"]:
         predicate_name = predicate_name.upper()
@@ -75,6 +77,8 @@ def normalize_predicate_name(predicate_name):
     return predicate_name
 
 def normalize_constant(constant):
+    if not isinstance(constant, basestring):
+        constant = str(constant)
     return constant.replace(".", "_DOT_").replace(" ", "_SPACE_").replace("-", "_")
 
 def amr2fol(amr, debug=False):
