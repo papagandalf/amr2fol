@@ -25,3 +25,8 @@
    :ARG0 (d / dog
             :ARG1-of (s / see
                         :ARG0 (i / i))))
+
+(bb / bark
+   :ARG0 (dd / dog
+            :ARG1-of (ss / see
+                        :ARG0 (ii / i))))

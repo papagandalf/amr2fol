@@ -5,8 +5,10 @@ AMR transformer to first order logic expressions
 implementation of Bos, J. Expressive Power of Abstract Meaning Representations, ACL, 2016.
 """
 
+import six
 import penman
 from nltk.sem.logic import Expression
+import utils
 
 
 class AMRCodecNoInvert(penman.AMRCodec):
@@ -67,7 +69,7 @@ def is_negative(variable, amr_graph):
     return polarity == 1
 
 def normalize_predicate_name(predicate_name):
-    if not isinstance(predicate_name, basestring):
+    if not isinstance(predicate_name, six.string_types):
         predicate_name = str(predicate_name)
     predicate_name = predicate_name.strip().replace("-", "_")
     if predicate_name in ["and", "or", "implies", "iff", "some", "exists", "exist", "all", "forall", "not"]:
@@ -77,7 +79,7 @@ def normalize_predicate_name(predicate_name):
     return predicate_name
 
 def normalize_constant(constant):
-    if not isinstance(constant, basestring):
+    if not isinstance(constant, six.string_types):
         constant = str(constant)
     return constant.replace(".", "_DOT_").replace(" ", "_SPACE_").replace("-", "_")
 
@@ -86,6 +88,7 @@ def amr2fol(amr, debug=False):
     assert len(amr_graph) == 1, "More than one AMR supplied"
     amr_graph = amr_graph[0]
     assert amr_graph.top == get_graph_root(amr_graph)
+    amr_graph = utils.rename_variables(amr_graph)
     assertive_part = lambda_amr_assertive(amr_graph, "\\u.T") # TODO: must u here be unique?
     assertive_logic = Expression.fromstring(assertive_part).simplify()
     projective_part = lambda_amr_projective(amr_graph)
