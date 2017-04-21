@@ -1,5 +1,5 @@
 # amr2fol
 
-transform Abstract Meaning Representation (AMR) to First Order Logic (FOL) formulas.
+Transform Abstract Meaning Representation (AMR) annotations to First Order Logic (FOL) formulas.
 
-Implementation (with some additions) of Bos, J. Expressive Power of Abstract Meaning Representations, ACL, 2016 [pdf](http://www.mitpressjournals.org/doi/pdf/10.1162/COLI_a_00257.)
+Implementation (with some additions) of ["Expressive Power of Abstract Meaning Representations", J. Bos, Computational Linguistics 42(3), 2016.](http://www.mitpressjournals.org/doi/pdf/10.1162/COLI_a_00257).

@@ -1,0 +1,1 @@
+from amr2fol import amr2fol as translate
